@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FAFAF8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Estima">
+<meta name="description" content="Трекер расходов на ремонт квартиры">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>Estima — Ремонт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════════════ */
+:root {
+  /* Backgrounds */
+  --bg:        #FAFAF8;
+  --bg2:       #F4F3F0;
+  --bg3:       #EDECE8;
+  --card:      #FFFFFF;
+  --card2:     #FDFCFA;
+
+  /* Borders */
+  --border:    #E8E6E0;
+  --border2:   #D8D4CB;
+
+  /* Accent — Gold */
+  --gold:      #B8962E;
+  --gold2:     #D4AE42;
+  --gold-bg:   #FBF7EC;
+  --gold-glow: rgba(184,150,46,.16);
+
+  /* Ink */
+  --ink:       #18160F;
+  --ink2:      #7A7260;
+  --ink3:      #B0A898;
+
+  /* Priority colors — muted, refined */
+  --p1:        #C0392B;   /* критично */
+  --p1-bg:     #FDF1F0;
+  --p1-border: #F0C8C4;
+  --p2:        #A07820;   /* важно */
+  --p2-bg:     #FBF6EA;
+  --p2-border: #E8D49A;
+  --p3:        #2E7A4A;   /* планируется */
+  --p3-bg:     #EDF6F1;
+  --p3-border: #A8D8BC;
+  --p4:        #8A8070;   /* вишлист */
+  --p4-bg:     #F5F4F1;
+  --p4-border: #CCC8BE;
+
+  /* Semantic */
+  --danger:    #C0392B;
+  --success:   #2E7A4A;
+
+  /* Nav */
+  --nav-bg:    rgba(250,250,248,.97);
+
+  /* Typography */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans:  'DM Sans', sans-serif;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.08), 0 0 0 1px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.12);
+}
+
+/* ═══════════════════════════════════════════════
+   RESET
+   ═══════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  height:100%;background:var(--bg);
+  font-family:var(--font-sans);color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
+}
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type=number]{-moz-appearance:textfield}
+::-webkit-scrollbar{width:0}
+button{-webkit-appearance:none;font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════ */
+@keyframes slideUp  {from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn   {from{opacity:0}to{opacity:1}}
+@keyframes sheet    {from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes pop      {0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake    {0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes barIn    {from{width:0}}
+
+.slide-up{animation:slideUp .38s cubic-bezier(.16,1,.3,1) both}
+.fade-in {animation:fadeIn .22s ease both}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════ */
+#app{
+  max-width:430px;margin:0 auto;
+  min-height:100vh;min-height:100dvh;
+  position:relative;background:var(--bg);overflow-x:hidden;
+}
+
+/* ── HEADER ── */
+#header{
+  position:sticky;top:0;z-index:40;
+  background:var(--nav-bg);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  padding:env(safe-area-inset-top,0) 0 0;
+}
+#header-inner{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 16px 12px;
+}
+#logo{display:flex;align-items:center;gap:9px}
+#logo-mark{
+  width:30px;height:30px;border-radius:9px;
+  background:var(--ink);
+  display:flex;align-items:center;justify-content:center;
+}
+#logo-name{
+  font-family:var(--font-serif);font-size:18px;font-weight:700;
+  letter-spacing:.8px;color:var(--ink);
+}
+#logo-name span{color:var(--gold)}
+#header-total{
+  font-family:var(--font-serif);
+  font-size:15px;font-style:italic;
+  color:var(--ink);font-weight:500;
+}
+
+/* ── CONTENT ── */
+#content{
+  padding-bottom:80px;
+  overflow-y:auto;
+  height:calc(100vh - 57px);
+  height:calc(100dvh - 57px);
+}
+
+/* ── BOTTOM NAV ── */
+#nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:var(--nav-bg);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(3,1fr);
+  z-index:40;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.nav-btn{
+  padding:10px 0 12px;background:none;border:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.nav-ico{transition:transform .2s cubic-bezier(.34,1.56,.64,1),color .15s}
+.nav-btn.active .nav-ico{transform:scale(1.15)}
+.nav-lbl{
+  font-size:10px;font-weight:600;letter-spacing:.4px;
+  text-transform:uppercase;transition:color .15s;
+}
+.nav-line{
+  width:16px;height:2px;border-radius:1px;
+  background:var(--gold);margin-top:1px;
+  opacity:0;transform:scaleX(0);
+  transition:opacity .2s,transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.nav-btn.active .nav-line{opacity:1;transform:scaleX(1)}
+
+/* ── TABS ── */
+.tab{display:none}
+.tab.active{display:block}
+
+/* ═══════════════════════════════════════════════
+   HOME — HERO
+   ═══════════════════════════════════════════════ */
+.hero{
+  background:var(--ink);
+  padding:28px 20px 30px;
+  position:relative;overflow:hidden;
+}
+/* Subtle grid */
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:28px 28px;
+  pointer-events:none;
+}
+/* Gold orb */
+.hero::after{
+  content:'';position:absolute;
+  right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(184,150,46,.2) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-inner{position:relative}
+.hero-eyebrow{
+  font-size:10px;font-weight:600;letter-spacing:1.5px;
+  color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px;
+}
+.hero-amount{
+  font-family:var(--font-serif);
+  font-size:52px;font-weight:500;line-height:1;
+  letter-spacing:-2px;margin-bottom:6px;
+  color:#fff;
+}
+.hero-amount span{color:var(--gold2)}
+.hero-sub{
+  font-size:12px;color:rgba(255,255,255,.4);
+  margin-bottom:24px;font-style:italic;
+}
+
+/* Budget bar in hero */
+.hero-budget{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:13px 15px;
+  margin-bottom:18px;
+}
+.hero-budget-row{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
+}
+.hero-budget-label{font-size:11px;color:rgba(255,255,255,.5);font-weight:500}
+.hero-budget-pct{font-size:13px;font-weight:600;color:#fff}
+.hero-bar{height:5px;background:rgba(255,255,255,.12);border-radius:10px;overflow:hidden}
+.hero-bar-fill{height:100%;border-radius:10px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.hero-budget-remain{
+  display:flex;justify-content:space-between;margin-top:7px;
+  font-size:10px;color:rgba(255,255,255,.35);
+}
+
+/* Hero stats */
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hstat{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:10px 12px;
+}
+.hstat-lbl{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px}
+.hstat-val{font-size:17px;font-weight:600;color:#fff}
+
+/* ═══════════════════════════════════════════════
+   PRIORITY ALERT (home)
+   ═══════════════════════════════════════════════ */
+.priority-alert{
+  margin:12px 16px 0;
+  background:var(--p1-bg);border:1px solid var(--p1-border);
+  border-radius:14px;padding:12px 15px;
+  display:flex;align-items:center;gap:10px;
+}
+.priority-alert-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--p1);flex-shrink:0;
+}
+.priority-alert-text{font-size:12px;color:var(--p1);font-weight:500}
+.priority-alert-amount{
+  margin-left:auto;
+  font-family:var(--font-serif);font-size:15px;font-style:italic;
+  color:var(--p1);font-weight:600;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION
+   ═══════════════════════════════════════════════ */
+.section{padding:16px 16px 0}
+.sec-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:11px;
+}
+.sec-title{
+  font-size:10px;font-weight:700;
+  color:var(--ink3);letter-spacing:.9px;text-transform:uppercase;
+}
+.sec-link{
+  font-size:12px;font-weight:600;color:var(--gold);
+  background:none;border:none;cursor:pointer;padding:0;
+}
+
+/* ═══════════════════════════════════════════════
+   QUICK ACTIONS
+   ═══════════════════════════════════════════════ */
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qbtn{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:14px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  text-align:left;transition:transform .12s,border-color .15s;
+  box-shadow:var(--shadow-sm);
+}
+.qbtn:active{transform:scale(.96)}
+.qbtn-ico{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--gold-bg);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(184,150,46,.2);
+}
+.qbtn-title{font-size:13px;font-weight:600;color:var(--ink)}
+.qbtn-sub{font-size:10px;color:var(--ink3);margin-top:-4px}
+
+/* ═══════════════════════════════════════════════
+   CATEGORY BREAKDOWN (home)
+   ═══════════════════════════════════════════════ */
+.cat-breakdown{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:0;overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+.catb-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 15px;border-bottom:1px solid var(--border);
+  transition:background .1s;
+}
+.catb-row:last-child{border-bottom:none}
+.catb-ico{
+  width:32px;height:32px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.catb-name{font-size:13px;font-weight:500;color:var(--ink);flex:1}
+.catb-bar-wrap{width:60px}
+.catb-bar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.catb-bar-fill{height:100%;border-radius:2px;background:var(--gold);transition:width .8s cubic-bezier(.4,0,.2,1)}
+.catb-amount{
+  font-family:var(--font-serif);font-size:14px;
+  font-style:italic;color:var(--ink);font-weight:500;
+  text-align:right;min-width:80px;
+}
+
+/* ═══════════════════════════════════════════════
+   EXPENSE CARDS
+   ═══════════════════════════════════════════════ */
+
+/* Priority groups */
+.pgroup{margin-bottom:8px}
+.pgroup-hdr{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 0 7px;
+}
+.pgroup-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pgroup-title{
+  font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+}
+.pgroup-sum{
+  margin-left:auto;font-size:11px;font-weight:600;
+  font-family:var(--font-serif);font-style:italic;
+}
+
+.ecard{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:14px 15px;margin-bottom:8px;
+  position:relative;overflow:hidden;
+  box-shadow:var(--shadow-sm);
+  transition:transform .12s;
+}
+.ecard:active{transform:scale(.99)}
+/* Priority stripe */
+.ecard::before{
+  content:'';position:absolute;
+  left:0;top:0;bottom:0;width:3px;
+}
+.ecard[data-p="1"]::before{background:var(--p1)}
+.ecard[data-p="2"]::before{background:var(--p2)}
+.ecard[data-p="3"]::before{background:var(--p3)}
+.ecard[data-p="4"]::before{background:var(--p4)}
+
+.ecard-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:0}
+.ecard-ico{
+  width:40px;height:40px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;flex-shrink:0;
+}
+.ecard-body{flex:1;min-width:0}
+.ecard-name{
+  font-size:14px;font-weight:600;color:var(--ink);
+  margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ecard-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.ecard-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.ecard-amount{
+  font-family:var(--font-serif);
+  font-size:20px;font-style:italic;
+  color:var(--ink);font-weight:500;
+  letter-spacing:-.3px;white-space:nowrap;
+}
+.ecard-acts{display:flex;gap:5px}
+.ecard-note{
+  font-size:12px;color:var(--ink2);margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--border);
+  font-style:italic;
+}
+
+/* Priority badge */
+.pbadge{
+  font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:20px;
+  letter-spacing:.2px;
+}
+.pbadge[data-p="1"]{background:var(--p1-bg);color:var(--p1);border:1px solid var(--p1-border)}
+.pbadge[data-p="2"]{background:var(--p2-bg);color:var(--p2);border:1px solid var(--p2-border)}
+.pbadge[data-p="3"]{background:var(--p3-bg);color:var(--p3);border:1px solid var(--p3-border)}
+.pbadge[data-p="4"]{background:var(--p4-bg);color:var(--p4);border:1px solid var(--p4-border)}
+
+/* Category badge */
+.cbadge{
+  font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:20px;
+  background:var(--bg2);color:var(--ink2);
+  border:1px solid var(--border2);
+}
+/* Date */
+.datelbl{font-size:10px;color:var(--ink3)}
+
+/* ═══════════════════════════════════════════════
+   FILTER BAR
+   ═══════════════════════════════════════════════ */
+.filter-scroll{
+  overflow-x:auto;white-space:nowrap;
+  padding:0 16px 12px;-webkit-overflow-scrolling:touch;
+}
+.filter-scroll::-webkit-scrollbar{display:none}
+.filter-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 13px;border-radius:20px;margin-right:6px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border2);
+  background:var(--card);color:var(--ink2);
+  transition:all .15s;white-space:nowrap;
+  box-shadow:var(--shadow-sm);
+}
+.filter-pill.active{
+  background:var(--ink);color:#fff;border-color:var(--ink);
+}
+.filter-pill.gold.active{
+  background:var(--gold);color:#fff;border-color:var(--gold);
+}
+
+/* Sort bar */
+.sort-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:0 16px 12px;
+}
+.sort-label{font-size:11px;color:var(--ink3);font-weight:500;flex-shrink:0}
+.sort-pills{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.sort-pills::-webkit-scrollbar{display:none}
+.spill{
+  padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--card);color:var(--ink2);
+  transition:all .15s;white-space:nowrap;
+}
+.spill.active{background:var(--bg3);color:var(--ink);border-color:var(--border2)}
+
+/* ═══════════════════════════════════════════════
+   ROOM CARDS
+   ═══════════════════════════════════════════════ */
+.rcard{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:16px;margin-bottom:10px;
+  box-shadow:var(--shadow-sm);cursor:pointer;
+  transition:transform .12s,box-shadow .12s;
+}
+.rcard:active{transform:scale(.99)}
+.rcard-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.rcard-ico{
+  width:44px;height:44px;border-radius:13px;
+  background:var(--gold-bg);border:1px solid rgba(184,150,46,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+.rcard-name{font-size:15px;font-weight:600;color:var(--ink)}
+.rcard-count{font-size:11px;color:var(--ink3);margin-top:2px}
+.rcard-right{margin-left:auto;text-align:right}
+.rcard-amount{
+  font-family:var(--font-serif);
+  font-size:20px;font-style:italic;color:var(--ink);font-weight:500;
+}
+.rcard-pct{font-size:11px;color:var(--ink3);margin-top:2px}
+
+/* Room detail back button */
+.back-row{
+  display:flex;align-items:center;gap:8px;
+  padding:13px 16px 0;
+}
+.back-btn{
+  display:flex;align-items:center;gap:5px;
+  background:none;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--ink2);
+  font-family:inherit;padding:0;
+}
+
+/* ═══════════════════════════════════════════════
+   ICON BUTTONS
+   ═══════════════════════════════════════════════ */
+.ibtn{
+  width:28px;height:28px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--border);
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--bg2);transition:all .12s;
+}
+.ibtn:active{transform:scale(.9)}
+.ibtn-del{background:#FDF1F0;border-color:#F0C8C4}
+
+/* ═══════════════════════════════════════════════
+   ADD BUTTON
+   ═══════════════════════════════════════════════ */
+.add-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 15px;border-radius:11px;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;
+  background:var(--ink);color:#fff;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+  transition:transform .1s,box-shadow .1s;
+}
+.add-btn:active{transform:scale(.96)}
+
+/* PAGE TITLE */
+.ptitle{
+  font-family:var(--font-serif);
+  font-size:28px;font-style:italic;font-weight:600;
+  color:var(--ink);
+}
+
+/* ═══════════════════════════════════════════════
+   BUDGET SETUP CARD (home when no budget)
+   ═══════════════════════════════════════════════ */
+.budget-setup{
+  margin:12px 16px 0;
+  background:var(--gold-bg);border:1px solid rgba(184,150,46,.25);
+  border-radius:16px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;
+}
+.budget-setup-ico{
+  width:38px;height:38px;border-radius:11px;
+  background:rgba(184,150,46,.12);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.budget-setup-text{flex:1}
+.budget-setup-title{font-size:13px;font-weight:600;color:var(--gold);margin-bottom:2px}
+.budget-setup-sub{font-size:11px;color:var(--ink2)}
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════ */
+.empty{text-align:center;padding:52px 24px;color:var(--ink3)}
+.empty-ico{font-size:38px;margin-bottom:12px;opacity:.5}
+.empty-title{
+  font-family:var(--font-serif);
+  font-size:22px;font-style:italic;color:var(--ink2);margin-bottom:6px;
+}
+.empty-sub{font-size:13px}
+
+/* ═══════════════════════════════════════════════
+   MODAL SHEET
+   ═══════════════════════════════════════════════ */
+#overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(24,22,15,.6);z-index:60;
+  align-items:flex-end;justify-content:center;
+}
+#overlay.open{display:flex;animation:fadeIn .2s ease}
+#sheet{
+  background:var(--bg);
+  border-radius:24px 24px 0 0;
+  border-top:1px solid var(--border);
+  width:100%;max-width:430px;
+  animation:sheet .32s cubic-bezier(.32,.72,0,1);
+  max-height:92vh;overflow-y:auto;
+  padding-bottom:env(safe-area-inset-bottom,20px);
+}
+.sheet-handle{
+  width:38px;height:4px;border-radius:2px;
+  background:var(--border2);margin:12px auto 0;
+}
+.sheet-inner{padding:20px 20px 12px}
+.sheet-hdr{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:22px;
+}
+.sheet-title{
+  font-family:var(--font-serif);
+  font-size:23px;font-style:italic;font-weight:600;color:var(--ink);
+}
+.sheet-close{
+  width:28px;height:28px;border-radius:8px;
+  background:var(--bg2);border:1px solid var(--border2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--ink2);
+}
+
+/* ─ FORM ─ */
+.field{margin-bottom:15px}
+.flbl{
+  font-size:10px;font-weight:700;
+  color:var(--ink3);letter-spacing:.9px;text-transform:uppercase;margin-bottom:6px;
+}
+.finput{
+  width:100%;padding:12px 14px;
+  border:1.5px solid var(--border2);border-radius:12px;
+  background:var(--bg2);font-size:15px;color:var(--ink);
+  outline:none;transition:border-color .15s,box-shadow .15s;
+}
+.finput:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-glow)}
+.finput::placeholder{color:var(--ink3)}
+.finput.error{border-color:var(--danger);animation:shake .4s ease}
+
+/* Priority selector */
+.psel{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:15px}
+.popt{
+  padding:10px 12px;border-radius:12px;cursor:pointer;
+  border:1.5px solid var(--border);background:var(--bg2);
+  display:flex;align-items:center;gap:8px;
+  transition:all .15s;
+}
+.popt:active{transform:scale(.97)}
+.popt.on[data-p="1"]{background:var(--p1-bg);border-color:var(--p1)}
+.popt.on[data-p="2"]{background:var(--p2-bg);border-color:var(--p2)}
+.popt.on[data-p="3"]{background:var(--p3-bg);border-color:var(--p3)}
+.popt.on[data-p="4"]{background:var(--p4-bg);border-color:var(--p4)}
+.popt-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.popt-label{font-size:12px;font-weight:600;color:var(--ink)}
+.popt-sub{font-size:10px;color:var(--ink3)}
+
+/* Category selector */
+.csel{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:15px}
+.copt{
+  padding:7px 13px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:500;
+  border:1.5px solid var(--border);background:var(--bg2);color:var(--ink2);
+  transition:all .15s;display:flex;align-items:center;gap:5px;
+}
+.copt.on{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
+
+/* Room selector */
+.rsel{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:15px}
+.ropt{
+  padding:7px 13px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:500;
+  border:1.5px solid var(--border);background:var(--bg2);color:var(--ink2);
+  transition:all .15s;
+}
+.ropt.on{background:var(--bg3);border-color:var(--border2);color:var(--ink)}
+
+/* Buttons */
+.btn{
+  width:100%;padding:13px;border-radius:13px;border:none;cursor:pointer;
+  font-size:14px;font-weight:600;transition:transform .1s;
+}
+.btn:active{transform:scale(.97)}
+.btn-ink{background:var(--ink);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.btn-sec{background:var(--bg2);color:var(--ink2);border:1px solid var(--border2)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:6px}
+.btn-danger{background:#FDF1F0;color:var(--danger);border:1px solid var(--p1-border)}
+
+/* ═══════════════════════════════════════════════
+   SEARCH
+   ═══════════════════════════════════════════════ */
+.search-wrap{
+  padding:10px 16px 0;position:relative;
+}
+.search-ico{
+  position:absolute;left:28px;top:50%;transform:translateY(-50%);
+  pointer-events:none;
+}
+.search-input{
+  width:100%;padding:10px 14px 10px 36px;
+  border:1.5px solid var(--border2);border-radius:12px;
+  background:var(--card);font-size:14px;color:var(--ink);
+  outline:none;transition:border-color .15s;
+}
+.search-input:focus{border-color:var(--gold)}
+.search-input::placeholder{color:var(--ink3)}
+
+/* ═══════════════════════════════════════════════
+   INSTALL BANNER
+   ═══════════════════════════════════════════════ */
+#install-banner{
+  display:none;
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:430px;z-index:50;
+  background:var(--ink);color:#fff;
+  padding:12px 16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+#install-banner.hidden{display:none!important}
+.install-text{flex:1;font-size:12px;font-weight:500}
+.install-btn{
+  padding:6px 14px;border-radius:9px;border:none;cursor:pointer;
+  background:var(--gold);color:#fff;font-size:12px;font-weight:600;
+  font-family:inherit;
+}
+.install-close{
+  width:24px;height:24px;background:rgba(255,255,255,.12);
+  border:none;cursor:pointer;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+
+/* ═══════════════════════════════════════════════
+   TOTAL ROW
+   ═══════════════════════════════════════════════ */
+.total-row{
+  margin:0 16px 10px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:11px 15px;
+  display:flex;justify-content:space-between;align-items:center;
+  box-shadow:var(--shadow-sm);
+}
+.total-label{font-size:11px;color:var(--ink3);font-weight:500}
+.total-val{
+  font-family:var(--font-serif);font-size:17px;
+  font-style:italic;font-weight:600;color:var(--ink);
+}
+
+/* spacer */
+.spacer{height:12px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-inner">
+      <div id="logo">
+        <div id="logo-mark">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <span id="logo-name">ESTIMA</span>
+      </div>
+      <div id="header-total">₽ 0</div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- ══ HOME ══ -->
+    <div id="tab-home" class="tab active">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-eyebrow">Итого потрачено</div>
+          <div class="hero-amount">₽ <span id="hero-spent">0</span></div>
+          <div class="hero-sub" id="hero-sub">Начни добавлять расходы</div>
+          <!-- Budget bar -->
+          <div class="hero-budget" id="hero-budget-block" style="display:none">
+            <div class="hero-budget-row">
+              <span class="hero-budget-label">Бюджет на ремонт</span>
+              <span class="hero-budget-pct" id="hero-bpct">0%</span>
+            </div>
+            <div class="hero-bar"><div class="hero-bar-fill" id="hero-bbar" style="width:0%"></div></div>
+            <div class="hero-budget-remain">
+              <span>Потрачено: <b id="hb-spent" style="color:rgba(255,255,255,.7)">0</b></span>
+              <span>Осталось: <b id="hb-left" style="color:rgba(255,255,255,.7)">0</b></span>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="hstat">
+              <div class="hstat-lbl">Позиций</div>
+              <div class="hstat-val" id="hstat-items">0</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-lbl">Комнат</div>
+              <div class="hstat-val" id="hstat-rooms">0</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-lbl">Критично</div>
+              <div class="hstat-val" id="hstat-crit">₽ 0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Priority alert -->
+      <div id="home-alert" class="priority-alert" style="display:none">
+        <div class="priority-alert-dot"></div>
+        <span class="priority-alert-text">Критичных расходов не оплачено</span>
+        <span class="priority-alert-amount" id="home-alert-amt">₽ 0</span>
+      </div>
+
+      <!-- Budget setup -->
+      <div id="home-budget-setup" class="budget-setup" onclick="openModal('budget')">
+        <div class="budget-setup-ico">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+          </svg>
+        </div>
+        <div class="budget-setup-text">
+          <div class="budget-setup-title">Установить бюджет</div>
+          <div class="budget-setup-sub">Укажи общую сумму на ремонт</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="section">
+        <div class="sec-hdr"><span class="sec-title">Быстрые действия</span></div>
+        <div class="quick-grid">
+          <button class="qbtn" onclick="switchTab('expenses');setTimeout(()=>openModal('add-expense'),60)">
+            <div class="qbtn-ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </div>
+            <div>
+              <div class="qbtn-title">Добавить трату</div>
+              <div class="qbtn-sub">Записать расход</div>
+            </div>
+          </button>
+          <button class="qbtn" onclick="openModal('export')">
+            <div class="qbtn-ico">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </div>
+            <div>
+              <div class="qbtn-title">Экспорт</div>
+              <div class="qbtn-sub">Скопировать список</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category breakdown -->
+      <div class="section" id="home-cats-section" style="display:none">
+        <div class="sec-hdr">
+          <span class="sec-title">По категориям</span>
+          <button class="sec-link" onclick="switchTab('expenses')">Все →</button>
+        </div>
+        <div class="cat-breakdown" id="home-cats-list"></div>
+      </div>
+
+      <!-- Empty -->
+      <div id="home-empty" class="empty">
+        <div class="empty-ico">🏗️</div>
+        <div class="empty-title">Ремонт ещё не начат</div>
+        <div class="empty-sub">Добавь первую трату или покупку</div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+
+    <!-- ══ EXPENSES ══ -->
+    <div id="tab-expenses" class="tab">
+      <div style="padding:16px 16px 12px;display:flex;justify-content:space-between;align-items:center">
+        <span class="ptitle">Расходы</span>
+        <button class="add-btn" onclick="openModal('add-expense')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить
+        </button>
+      </div>
+
+      <!-- Search -->
+      <div class="search-wrap">
+        <svg class="search-ico" width="14" height="14" style="top:50%;transform:translateY(-20%)" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="search-input" placeholder="Поиск по названию…" oninput="renderExpenses()">
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-scroll" id="cat-filters" style="padding-top:10px"></div>
+
+      <!-- Sort -->
+      <div class="sort-bar">
+        <span class="sort-label">Сортировка:</span>
+        <div class="sort-pills">
+          <button class="spill active" id="sort-priority" onclick="setSort('priority')">По важности</button>
+          <button class="spill" id="sort-date" onclick="setSort('date')">По дате</button>
+          <button class="spill" id="sort-amount" onclick="setSort('amount')">По сумме</button>
+        </div>
+      </div>
+
+      <!-- Total row -->
+      <div class="total-row" id="exp-total-row" style="display:none">
+        <span class="total-label">Итого по фильтру</span>
+        <span class="total-val" id="exp-total-val">₽ 0</span>
+      </div>
+
+      <!-- List -->
+      <div style="padding:0 16px" id="exp-list"></div>
+      <div id="exp-empty" class="empty" style="display:none">
+        <div class="empty-ico">🔍</div>
+        <div class="empty-title">Ничего не найдено</div>
+        <div class="empty-sub">Попробуй другой фильтр или поиск</div>
+      </div>
+      <div class="spacer"></div>
+    </div>
+
+    <!-- ══ ROOMS ══ -->
+    <div id="tab-rooms" class="tab">
+      <div id="rooms-list-view">
+        <div style="padding:16px 16px 12px;display:flex;justify-content:space-between;align-items:center">
+          <span class="ptitle">Комнаты</span>
+          <button class="add-btn" onclick="openModal('add-room')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить
+          </button>
+        </div>
+        <div style="padding:0 16px" id="rooms-list"></div>
+        <div id="rooms-empty" class="empty" style="display:none">
+          <div class="empty-ico">🏠</div>
+          <div class="empty-title">Комнат нет</div>
+          <div class="empty-sub">Добавь кухню, спальню, ванную…</div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+
+      <!-- Room detail -->
+      <div id="room-detail" style="display:none">
+        <div class="back-row">
+          <button class="back-btn" onclick="closeRoomDetail()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            Все комнаты
+          </button>
+        </div>
+        <div id="room-detail-content"></div>
+        <div class="spacer"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav id="nav">
+    <button class="nav-btn active" id="nav-home" onclick="switchTab('home')">
+      <div class="nav-ico" style="color:var(--ink)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-lbl" style="color:var(--ink)">Главная</span>
+      <div class="nav-line"></div>
+    </button>
+    <button class="nav-btn" id="nav-expenses" onclick="switchTab('expenses')">
+      <div class="nav-ico" style="color:var(--ink3)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
+      <span class="nav-lbl" style="color:var(--ink3)">Расходы</span>
+      <div class="nav-line"></div>
+    </button>
+    <button class="nav-btn" id="nav-rooms" onclick="switchTab('rooms')">
+      <div class="nav-ico" style="color:var(--ink3)">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/><path d="M3 9h18"/></svg>
+      </div>
+      <span class="nav-lbl" style="color:var(--ink3)">Комнаты</span>
+      <div class="nav-line"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- MODAL -->
+<div id="overlay" onclick="overlayClick(event)">
+  <div id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-inner">
+      <div class="sheet-hdr">
+        <div class="sheet-title" id="sheet-title"></div>
+        <button class="sheet-close" onclick="closeModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="sheet-body"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════ */
+const CATS = [
+  {id:'materials', label:'Материалы',  emoji:'🧱'},
+  {id:'furniture', label:'Мебель',     emoji:'🛋️'},
+  {id:'tech',      label:'Техника',    emoji:'📺'},
+  {id:'plumbing',  label:'Сантехника', emoji:'🚿'},
+  {id:'electric',  label:'Электрика',  emoji:'⚡'},
+  {id:'workers',   label:'Мастера',    emoji:'👷'},
+  {id:'decor',     label:'Декор',      emoji:'🎨'},
+  {id:'other',     label:'Прочее',     emoji:'📦'},
+];
+
+const PRIORITIES = [
+  {id:1, label:'Критично',    sub:'Стоп-блокеры',    color:'var(--p1)', dot:'#C0392B'},
+  {id:2, label:'Важно',       sub:'Нужно скоро',     color:'var(--p2)', dot:'#A07820'},
+  {id:3, label:'Планируется', sub:'Когда будут деньги', color:'var(--p3)', dot:'#2E7A4A'},
+  {id:4, label:'Вишлист',     sub:'Мечты и идеи',    color:'var(--p4)', dot:'#8A8070'},
+];
+
+const DEFAULT_ROOMS = [
+  {id:'kitchen',  label:'Кухня',        emoji:'🍳'},
+  {id:'bedroom',  label:'Спальня',      emoji:'🛏️'},
+  {id:'bathroom', label:'Ванная',       emoji:'🚿'},
+  {id:'living',   label:'Гостиная',     emoji:'🛋️'},
+  {id:'hallway',  label:'Прихожая',     emoji:'🚪'},
+  {id:'balcony',  label:'Балкон',       emoji:'🌿'},
+];
+
+/* ═══════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════ */
+let S = {
+  expenses: [],
+  rooms: [],
+  budget: 0,
+  tab: 'home',
+  sort: 'priority',
+  catFilter: 'all',
+  selPriority: 1,
+  selCat: 'materials',
+  selRoom: '',
+  editId: null,
+  detailRoom: null,
+};
+
+/* ─ PERSISTENCE ─ */
+function save(){
+  try{ localStorage.setItem('estima_v1', JSON.stringify({
+    expenses: S.expenses,
+    rooms: S.rooms,
+    budget: S.budget,
+  })); }catch(e){}
+}
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem('estima_v1')||'{}');
+    if(d.expenses) S.expenses = d.expenses;
+    if(d.rooms)    S.rooms    = d.rooms;
+    if(d.budget)   S.budget   = d.budget;
+  }catch(e){}
+}
+
+/* ═══════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════ */
+const fmt    = n => '₽\u00a0' + Math.round(n).toLocaleString('ru-RU');
+const nowStr = () => new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});
+const catObj = id => CATS.find(c=>c.id===id) || CATS[7];
+const priObj = id => PRIORITIES.find(p=>p.id===id) || PRIORITIES[3];
+const totalSpent = () => S.expenses.reduce((a,e)=>a+e.amount,0);
+
+function svgEdit(){
+  return`<svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="var(--ink2)"stroke-width="1.8"stroke-linecap="round"stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+}
+function svgTrash(){
+  return`<svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="var(--danger)"stroke-width="1.8"stroke-linecap="round"stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+}
+
+/* ═══════════════════════════════════════════════
+   TAB SWITCHING
+   ═══════════════════════════════════════════════ */
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.remove('active');
+    b.querySelector('.nav-ico').style.color='var(--ink3)';
+    b.querySelector('.nav-lbl').style.color='var(--ink3)';
+  });
+  document.getElementById('tab-'+t).classList.add('active');
+  const nb = document.getElementById('nav-'+t);
+  nb.classList.add('active');
+  nb.querySelector('.nav-ico').style.color='var(--ink)';
+  nb.querySelector('.nav-lbl').style.color='var(--ink)';
+  S.tab = t;
+  render();
+}
+
+/* ═══════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════ */
+function render(){
+  updateHeader();
+  if(S.tab==='home')     renderHome();
+  if(S.tab==='expenses') renderExpenses();
+  if(S.tab==='rooms')    renderRooms();
+}
+
+function updateHeader(){
+  document.getElementById('header-total').textContent = fmt(totalSpent());
+}
+
+/* ─ HOME ─ */
+function renderHome(){
+  const spent = totalSpent();
+  document.getElementById('hero-spent').textContent = Math.round(spent).toLocaleString('ru-RU');
+  document.getElementById('hstat-items').textContent = S.expenses.length;
+  document.getElementById('hstat-rooms').textContent = S.rooms.length;
+
+  const critAmt = S.expenses.filter(e=>e.priority===1).reduce((a,e)=>a+e.amount,0);
+  document.getElementById('hstat-crit').textContent = critAmt>0 ? fmt(critAmt) : '₽ 0';
+
+  // Sub text
+  const n = S.expenses.length;
+  document.getElementById('hero-sub').textContent = n>0
+    ? `${n} ${n===1?'позиция':n<5?'позиции':'позиций'} · ${S.rooms.length} ${S.rooms.length===1?'комната':S.rooms.length<5?'комнаты':'комнат'}`
+    : 'Начни добавлять расходы';
+
+  // Budget
+  const bb = document.getElementById('hero-budget-block');
+  const bs = document.getElementById('home-budget-setup');
+  if(S.budget>0){
+    bb.style.display='block';
+    bs.style.display='none';
+    const p = Math.min(100, Math.round(spent/S.budget*100));
+    document.getElementById('hero-bpct').textContent = p+'%';
+    const bar = document.getElementById('hero-bbar');
+    bar.style.width = p+'%';
+    bar.style.background = p>=90?'#C0392B':p>=70?'#A07820':'var(--gold2)';
+    document.getElementById('hb-spent').textContent = fmt(spent);
+    document.getElementById('hb-left').textContent  = fmt(Math.max(0,S.budget-spent));
+  } else {
+    bb.style.display='none';
+    bs.style.display='flex';
+  }
+
+  // Priority alert
+  const alert = document.getElementById('home-alert');
+  if(critAmt>0){
+    alert.style.display='flex';
+    document.getElementById('home-alert-amt').textContent = fmt(critAmt);
+  } else { alert.style.display='none'; }
+
+  // Category breakdown
+  const catSec = document.getElementById('home-cats-section');
+  if(S.expenses.length>0){
+    catSec.style.display='block';
+    const totals = {};
+    S.expenses.forEach(e=>{ totals[e.category]=(totals[e.category]||0)+e.amount; });
+    const sorted = CATS.filter(c=>totals[c.id]).sort((a,b)=>(totals[b.id]||0)-(totals[a.id]||0));
+    const max = Math.max(...sorted.map(c=>totals[c.id]||0));
+    document.getElementById('home-cats-list').innerHTML = sorted.map(c=>{
+      const pct = max>0 ? Math.round((totals[c.id]||0)/max*100) : 0;
+      return `<div class="catb-row">
+        <div class="catb-ico">${c.emoji}</div>
+        <span class="catb-name">${c.label}</span>
+        <div class="catb-bar-wrap">
+          <div class="catb-bar"><div class="catb-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        <span class="catb-amount">${fmt(totals[c.id]||0)}</span>
+      </div>`;
+    }).join('');
+    document.getElementById('home-empty').style.display='none';
+  } else {
+    catSec.style.display='none';
+    document.getElementById('home-empty').style.display='block';
+  }
+}
+
+/* ─ EXPENSES ─ */
+function renderExpenses(){
+  // Build category filter bar
+  const catFilters = document.getElementById('cat-filters');
+  const usedCats = [...new Set(S.expenses.map(e=>e.category))];
+  catFilters.innerHTML = `
+    <button class="filter-pill${S.catFilter==='all'?' active':''}" onclick="setCatFilter('all')">Все</button>
+    <button class="filter-pill${S.catFilter==='p1'?' active gold':''}" onclick="setCatFilter('p1')" style="${S.catFilter==='p1'?'':''}">🔴 Критично</button>
+    <button class="filter-pill${S.catFilter==='p2'?' active gold':''}" onclick="setCatFilter('p2')">🟡 Важно</button>
+    <button class="filter-pill${S.catFilter==='p3'?' active gold':''}" onclick="setCatFilter('p3')">🟢 Планируется</button>
+    <button class="filter-pill${S.catFilter==='p4'?' active gold':''}" onclick="setCatFilter('p4')">⚪ Вишлист</button>
+    ${usedCats.map(id=>{
+      const c=catObj(id);
+      return `<button class="filter-pill${S.catFilter===id?' active':''}" onclick="setCatFilter('${id}')">${c.emoji} ${c.label}</button>`;
+    }).join('')}
+  `;
+
+  const q = (document.getElementById('search-input')?.value||'').toLowerCase();
+  let list = [...S.expenses];
+
+  // Filter
+  if(S.catFilter==='p1') list=list.filter(e=>e.priority===1);
+  else if(S.catFilter==='p2') list=list.filter(e=>e.priority===2);
+  else if(S.catFilter==='p3') list=list.filter(e=>e.priority===3);
+  else if(S.catFilter==='p4') list=list.filter(e=>e.priority===4);
+  else if(S.catFilter!=='all') list=list.filter(e=>e.category===S.catFilter);
+
+  // Search
+  if(q) list=list.filter(e=>e.name.toLowerCase().includes(q)||(e.note||'').toLowerCase().includes(q));
+
+  // Sort
+  if(S.sort==='priority'){
+    list.sort((a,b)=>a.priority-b.priority||new Date(b.createdAt)-new Date(a.createdAt));
+  } else if(S.sort==='date'){
+    list.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  } else if(S.sort==='amount'){
+    list.sort((a,b)=>b.amount-a.amount);
+  }
+
+  // Total row
+  const filteredTotal = list.reduce((a,e)=>a+e.amount,0);
+  const totalRow = document.getElementById('exp-total-row');
+  if(list.length>0 && (S.catFilter!=='all'||q)){
+    totalRow.style.display='flex';
+    document.getElementById('exp-total-val').textContent=fmt(filteredTotal);
+  } else { totalRow.style.display='none'; }
+
+  const container = document.getElementById('exp-list');
+  const empty = document.getElementById('exp-empty');
+
+  if(!list.length){ empty.style.display='block'; container.innerHTML=''; return; }
+  empty.style.display='none';
+
+  // Render grouped by priority or flat
+  if(S.sort==='priority' && S.catFilter==='all' && !q){
+    let html='';
+    PRIORITIES.forEach(pr=>{
+      const items = list.filter(e=>e.priority===pr.id);
+      if(!items.length) return;
+      const grpTotal = items.reduce((a,e)=>a+e.amount,0);
+      html+=`<div class="pgroup">
+        <div class="pgroup-hdr">
+          <div class="pgroup-dot" style="background:${pr.dot}"></div>
+          <span class="pgroup-title" style="color:${pr.dot}">${pr.label}</span>
+          <span class="pgroup-sum" style="color:${pr.dot}">${fmt(grpTotal)}</span>
+        </div>
+        ${items.map((e,i)=>expCard(e,i)).join('')}
+      </div>`;
+    });
+    container.innerHTML=html;
+  } else {
+    container.innerHTML = list.map((e,i)=>expCard(e,i)).join('');
+  }
+}
+
+function expCard(e,i){
+  const cat = catObj(e.category);
+  const pri = priObj(e.priority);
+  const room= S.rooms.find(r=>r.id===e.roomId);
+  return `<div class="ecard slide-up" data-p="${e.priority}" style="animation-delay:${Math.min(i,.12)*0.05}s">
+    <div class="ecard-head">
+      <div class="ecard-ico" style="background:${catBg(e.category)}">${cat.emoji}</div>
+      <div class="ecard-body">
+        <div class="ecard-name">${e.name}</div>
+        <div class="ecard-meta">
+          <span class="pbadge" data-p="${e.priority}">${pri.label}</span>
+          <span class="cbadge">${cat.label}</span>
+          ${room?`<span class="cbadge">${room.emoji} ${room.label}</span>`:''}
+          <span class="datelbl">${e.date}</span>
+        </div>
+      </div>
+      <div class="ecard-right">
+        <div class="ecard-amount">${fmt(e.amount)}</div>
+        <div class="ecard-acts">
+          <button class="ibtn" onclick="openModal('edit-expense',{id:'${e.id}'})">${svgEdit()}</button>
+          <button class="ibtn ibtn-del" onclick="deleteExpense('${e.id}')">${svgTrash()}</button>
+        </div>
+      </div>
+    </div>
+    ${e.note?`<div class="ecard-note">${e.note}</div>`:''}
+  </div>`;
+}
+
+function catBg(id){
+  const map={
+    materials:'#F5F2EA',furniture:'#EDF2F8',tech:'#EEF5EE',
+    plumbing:'#EEF4F8',electric:'#F8F5EA',workers:'#F2EEF5',
+    decor:'#F8EEF2',other:'#F2F2F2'
+  };
+  return map[id]||'#F5F5F5';
+}
+
+/* ─ ROOMS ─ */
+function renderRooms(){
+  const list = document.getElementById('rooms-list');
+  const empty= document.getElementById('rooms-empty');
+  if(!S.rooms.length){ empty.style.display='block'; list.innerHTML=''; return; }
+  empty.style.display='none';
+
+  list.innerHTML = S.rooms.map((r,i)=>{
+    const roomExp = S.expenses.filter(e=>e.roomId===r.id);
+    const total   = roomExp.reduce((a,e)=>a+e.amount,0);
+    const pct     = r.budget>0 ? Math.min(100,Math.round(total/r.budget*100)) : null;
+    const crit    = roomExp.filter(e=>e.priority===1).length;
+    return `<div class="rcard slide-up" style="animation-delay:${i*.05}s" onclick="openRoomDetail('${r.id}')">
+      <div class="rcard-head">
+        <div class="rcard-ico">${r.emoji}</div>
+        <div>
+          <div class="rcard-name">${r.label}</div>
+          <div class="rcard-count">${roomExp.length} позиций${crit>0?` · <span style="color:var(--p1)">${crit} критично</span>`:''}</div>
+        </div>
+        <div class="rcard-right">
+          <div class="rcard-amount">${fmt(total)}</div>
+          ${pct!==null?`<div class="rcard-pct" style="color:${pct>=90?'var(--p1)':pct>=70?'var(--p2)':'var(--ink3)'}">Бюджет: ${pct}%</div>`:''}
+        </div>
+      </div>
+      ${pct!==null?`<div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${pct>=90?'var(--p1)':pct>=70?'var(--p2)':'var(--gold)'}"></div></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openRoomDetail(id){
+  S.detailRoom = id;
+  const r = S.rooms.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('rooms-list-view').style.display='none';
+  document.getElementById('room-detail').style.display='block';
+
+  const roomExp = S.expenses.filter(e=>e.roomId===id);
+  const total   = roomExp.reduce((a,e)=>a+e.amount,0);
+  const sorted  = [...roomExp].sort((a,b)=>a.priority-b.priority||b.amount-a.amount);
+
+  let html = `
+    <div style="padding:12px 16px 0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:46px;height:46px;border-radius:14px;background:var(--gold-bg);border:1px solid rgba(184,150,46,.2);display:flex;align-items:center;justify-content:center;font-size:24px">${r.emoji}</div>
+          <div>
+            <div class="ptitle">${r.label}</div>
+            <div style="font-size:12px;color:var(--ink3)">${roomExp.length} позиций</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:var(--font-serif);font-size:24px;font-style:italic;color:var(--ink)">${fmt(total)}</div>
+          ${r.budget>0?`<div style="font-size:11px;color:var(--ink3)">из ${fmt(r.budget)}</div>`:''}
+        </div>
+      </div>
+      ${r.budget>0?`
+        <div style="margin-top:10px">
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.min(100,Math.round(total/r.budget*100))}%;background:var(--gold)"></div></div>
+        </div>
+      `:''}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="add-btn" style="flex:1;justify-content:center" onclick="closeModal();S.selRoom='${r.id}';openModal('add-expense')">
+          <svg width="13"height="13"viewBox="0 0 24 24"fill="none"stroke="#fff"stroke-width="2.2"stroke-linecap="round"><line x1="12"y1="5"x2="12"y2="19"/><line x1="5"y1="12"x2="19"y2="12"/></svg>
+          Добавить трату
+        </button>
+        <button class="ibtn" style="width:auto;padding:0 12px;height:36px;border-radius:11px" onclick="openModal('edit-room',{id:'${r.id}'})">${svgEdit()} <span style="font-size:12px;margin-left:4px">Изменить</span></button>
+        <button class="ibtn ibtn-del" style="width:36px;height:36px;border-radius:11px" onclick="deleteRoom('${r.id}')">${svgTrash()}</button>
+      </div>
+    </div>
+    <div style="padding:14px 16px 0">
+  `;
+
+  if(!sorted.length){
+    html += `<div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Нет расходов</div><div class="empty-sub">Добавь первую трату в эту комнату</div></div>`;
+  } else {
+    // group by priority
+    PRIORITIES.forEach(pr=>{
+      const items = sorted.filter(e=>e.priority===pr.id);
+      if(!items.length) return;
+      const grpT = items.reduce((a,e)=>a+e.amount,0);
+      html+=`<div class="pgroup">
+        <div class="pgroup-hdr">
+          <div class="pgroup-dot" style="background:${pr.dot}"></div>
+          <span class="pgroup-title" style="color:${pr.dot}">${pr.label}</span>
+          <span class="pgroup-sum" style="color:${pr.dot}">${fmt(grpT)}</span>
+        </div>
+        ${items.map((e,i)=>expCard(e,i)).join('')}
+      </div>`;
+    });
+  }
+  html += '</div>';
+  document.getElementById('room-detail-content').innerHTML = html;
+}
+
+function closeRoomDetail(){
+  S.detailRoom = null;
+  document.getElementById('rooms-list-view').style.display='block';
+  document.getElementById('room-detail').style.display='none';
+}
+
+/* ─ FILTERS & SORT ─ */
+function setCatFilter(f){ S.catFilter=f; renderExpenses(); }
+function setSort(s){
+  S.sort=s;
+  document.querySelectorAll('.spill').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sort-'+s).classList.add('active');
+  renderExpenses();
+}
+
+/* ═══════════════════════════════════════════════
+   MODAL
+   ═══════════════════════════════════════════════ */
+function openModal(type, data={}){
+  S.editId = data.id||null;
+  const title = document.getElementById('sheet-title');
+  const body  = document.getElementById('sheet-body');
+
+  if(type==='add-expense'||type==='edit-expense'){
+    const isEdit = type==='edit-expense';
+    const e = isEdit ? S.expenses.find(x=>x.id===data.id) : null;
+    if(isEdit && e){
+      S.selPriority = e.priority;
+      S.selCat = e.category;
+      S.selRoom = e.roomId||'';
+    } else {
+      S.selPriority = S.selPriority||1;
+      S.selCat = S.selCat||'materials';
+    }
+    title.textContent = isEdit ? 'Редактировать' : 'Новая трата';
+    body.innerHTML = `
+      <div class="field">
+        <div class="flbl">Название</div>
+        <input class="finput" id="f-name" placeholder="Напр: Плитка для ванной" value="${isEdit?e.name:''}">
+      </div>
+      <div class="field">
+        <div class="flbl">Сумма (₽)</div>
+        <input class="finput" id="f-amount" type="number" placeholder="15 000" value="${isEdit?e.amount:''}">
+      </div>
+      <div class="field">
+        <div class="flbl">Важность</div>
+        <div class="psel">
+          ${PRIORITIES.map(p=>`
+            <div class="popt${S.selPriority===p.id?' on':''}" data-p="${p.id}" onclick="selPriority(${p.id})">
+              <div class="popt-dot" style="background:${p.dot}"></div>
+              <div>
+                <div class="popt-label">${p.label}</div>
+                <div class="popt-sub">${p.sub}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <div class="flbl">Категория</div>
+        <div class="csel">
+          ${CATS.map(c=>`
+            <div class="copt${S.selCat===c.id?' on':''}" onclick="selCat('${c.id}')">${c.emoji} ${c.label}</div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <div class="flbl">Комната</div>
+        <div class="rsel" id="room-sel">
+          <div class="ropt${!S.selRoom?' on':''}" onclick="selRoom('')">Не указана</div>
+          ${S.rooms.map(r=>`
+            <div class="ropt${S.selRoom===r.id?' on':''}" onclick="selRoom('${r.id}')">${r.emoji} ${r.label}</div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <div class="flbl">Заметка (необязательно)</div>
+        <input class="finput" id="f-note" placeholder="Магазин, артикул, детали…" value="${isEdit?(e.note||''):''}">
+      </div>
+      ${isEdit?`<div class="field"><div class="flbl">Дата</div><input class="finput" id="f-date" value="${e.date}"></div>`:''}
+      <div class="btn-row">
+        <button class="btn btn-sec" onclick="closeModal()">Отмена</button>
+        <button class="btn btn-ink" onclick="${isEdit?'submitEditExpense()':'submitExpense()'}">
+          ${isEdit?'Сохранить':'Добавить'}
+        </button>
+      </div>
+      ${isEdit?`<div style="margin-top:9px"><button class="btn btn-danger" onclick="deleteExpense('${e.id}');closeModal()">Удалить трату</button></div>`:''}
+    `;
+
+  } else if(type==='add-room'||type==='edit-room'){
+    const isEdit = type==='edit-room';
+    const r = isEdit ? S.rooms.find(x=>x.id===data.id) : null;
+    title.textContent = isEdit ? 'Редактировать комнату' : 'Новая комната';
+    body.innerHTML = `
+      <div class="field">
+        <div class="flbl">Название</div>
+        <input class="finput" id="f-rname" placeholder="Напр: Кухня" value="${isEdit?r.label:''}">
+      </div>
+      <div class="field">
+        <div class="flbl">Иконка (эмодзи)</div>
+        <input class="finput" id="f-remoji" placeholder="🏠" maxlength="2" value="${isEdit?r.emoji:''}">
+      </div>
+      <div class="field">
+        <div class="flbl">Бюджет на комнату (₽, необязательно)</div>
+        <input class="finput" id="f-rbudget" type="number" placeholder="200 000" value="${isEdit?(r.budget||''):''}">
+      </div>
+      ${isEdit?'':'<div class="field"><div class="flbl">Быстрый выбор</div><div class="rsel">'+
+        DEFAULT_ROOMS.map(dr=>`<div class="ropt" onclick="document.getElementById('f-rname').value='${dr.label}';document.getElementById('f-remoji').value='${dr.emoji}'">${dr.emoji} ${dr.label}</div>`).join('')+
+      '</div></div>'}
+      <div class="btn-row">
+        <button class="btn btn-sec" onclick="closeModal()">Отмена</button>
+        <button class="btn btn-ink" onclick="${isEdit?`submitEditRoom('${r.id}')`:'submitRoom()'}">${isEdit?'Сохранить':'Создать'}</button>
+      </div>
+    `;
+
+  } else if(type==='budget'){
+    title.textContent = 'Бюджет ремонта';
+    body.innerHTML = `
+      <div style="font-size:13px;color:var(--ink2);margin-bottom:16px;font-style:italic">Укажи общую сумму которую ты готов потратить на ремонт. Приложение покажет сколько уже израсходовано.</div>
+      <div class="field">
+        <div class="flbl">Общий бюджет (₽)</div>
+        <input class="finput" id="f-budget" type="number" placeholder="1 500 000" value="${S.budget||''}">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-sec" onclick="closeModal()">Отмена</button>
+        <button class="btn btn-ink" onclick="submitBudget()">Сохранить</button>
+      </div>
+      ${S.budget>0?`<div style="margin-top:9px"><button class="btn btn-danger" onclick="S.budget=0;save();closeModal();render()">Сбросить бюджет</button></div>`:''}
+    `;
+
+  } else if(type==='export'){
+    title.textContent = 'Экспорт расходов';
+    const sorted = [...S.expenses].sort((a,b)=>a.priority-b.priority||b.amount-a.amount);
+    let text = `ESTIMA — Расходы на ремонт\n${nowStr()}\n`;
+    text += `Итого: ${fmt(totalSpent())}\n`;
+    if(S.budget>0) text += `Бюджет: ${fmt(S.budget)}\n`;
+    text += '\n';
+    PRIORITIES.forEach(pr=>{
+      const items = sorted.filter(e=>e.priority===pr.id);
+      if(!items.length) return;
+      text += `── ${pr.label.toUpperCase()} ──\n`;
+      items.forEach(e=>{
+        const cat = catObj(e.category);
+        const room= S.rooms.find(r=>r.id===e.roomId);
+        text += `• ${e.name} — ${fmt(e.amount)}`;
+        text += ` [${cat.label}]`;
+        if(room) text += ` [${room.label}]`;
+        if(e.note) text += `\n  ${e.note}`;
+        text += '\n';
+      });
+      text += '\n';
+    });
+    body.innerHTML = `
+      <textarea class="finput" id="export-text" rows="10" style="font-size:12px;font-family:monospace;resize:none">${text}</textarea>
+      <div style="margin-top:12px">
+        <button class="btn btn-ink" onclick="
+          navigator.clipboard.writeText(document.getElementById('export-text').value)
+            .then(()=>{this.textContent='✓ Скопировано!';setTimeout(()=>{this.textContent='Скопировать в буфер'},2000)})
+            .catch(()=>{document.getElementById('export-text').select();document.execCommand('copy');this.textContent='✓ Скопировано!'})
+        ">Скопировать в буфер</button>
+      </div>
+    `;
+  }
+
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>{
+    const fi = body.querySelector('.finput:not(textarea)');
+    if(fi) fi.focus();
+  }, 360);
+}
+
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+function overlayClick(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+
+/* Selectors */
+function selPriority(p){
+  S.selPriority=p;
+  document.querySelectorAll('.popt').forEach(el=>{
+    el.classList.toggle('on', +el.dataset.p===p);
+  });
+}
+function selCat(c){
+  S.selCat=c;
+  document.querySelectorAll('.copt').forEach(el=>{
+    el.classList.toggle('on', el.onclick?.toString().includes(`'${c}'`)||el.textContent.includes(catObj(c).label));
+  });
+  // re-render csel
+  document.querySelectorAll('.copt').forEach(el=>{
+    const label = catObj(c).label;
+    el.classList.toggle('on', el.textContent.includes(label) && el.textContent.includes(catObj(c).emoji));
+  });
+}
+function selRoom(r){
+  S.selRoom=r;
+  document.querySelectorAll('.ropt').forEach(el=>{
+    const isNone = r==='' && el.textContent==='Не указана';
+    const isMatch = r!=='' && el.getAttribute('onclick')?.includes(`'${r}'`);
+    el.classList.toggle('on', isNone||isMatch);
+  });
+}
+
+/* ─ SUBMITS ─ */
+function submitExpense(){
+  const name   = document.getElementById('f-name').value.trim();
+  const amount = +document.getElementById('f-amount').value;
+  const note   = document.getElementById('f-note').value.trim();
+  if(!name){ shake('f-name'); return; }
+  if(!amount){ shake('f-amount'); return; }
+  S.expenses.unshift({
+    id: 'e_'+Date.now(),
+    name, amount,
+    priority: S.selPriority,
+    category: S.selCat,
+    roomId: S.selRoom,
+    note,
+    date: nowStr(),
+    createdAt: new Date().toISOString(),
+  });
+  save(); closeModal(); render();
+}
+
+function submitEditExpense(){
+  const name   = document.getElementById('f-name').value.trim();
+  const amount = +document.getElementById('f-amount').value;
+  const note   = document.getElementById('f-note').value.trim();
+  const date   = document.getElementById('f-date').value;
+  if(!name){ shake('f-name'); return; }
+  if(!amount){ shake('f-amount'); return; }
+  S.expenses = S.expenses.map(e=>e.id===S.editId
+    ?{...e,name,amount,priority:S.selPriority,category:S.selCat,roomId:S.selRoom,note,date}:e);
+  save(); closeModal(); render();
+  if(S.detailRoom) openRoomDetail(S.detailRoom);
+}
+
+function deleteExpense(id){
+  S.expenses = S.expenses.filter(e=>e.id!==id);
+  save(); closeModal(); render();
+  if(S.detailRoom) setTimeout(()=>openRoomDetail(S.detailRoom),50);
+}
+
+function submitRoom(){
+  const label  = document.getElementById('f-rname').value.trim();
+  const emoji  = document.getElementById('f-remoji').value.trim()||'🏠';
+  const budget = +document.getElementById('f-rbudget').value||0;
+  if(!label){ shake('f-rname'); return; }
+  S.rooms.push({ id:'r_'+Date.now(), label, emoji, budget });
+  save(); closeModal(); render();
+}
+
+function submitEditRoom(id){
+  const label  = document.getElementById('f-rname').value.trim();
+  const emoji  = document.getElementById('f-remoji').value.trim()||'🏠';
+  const budget = +document.getElementById('f-rbudget').value||0;
+  if(!label){ shake('f-rname'); return; }
+  S.rooms = S.rooms.map(r=>r.id===id?{...r,label,emoji,budget}:r);
+  save(); closeModal(); render();
+  if(S.detailRoom) openRoomDetail(S.detailRoom);
+}
+
+function deleteRoom(id){
+  S.rooms = S.rooms.filter(r=>r.id!==id);
+  S.expenses = S.expenses.map(e=>e.roomId===id?{...e,roomId:''}:e);
+  save(); closeModal();
+  closeRoomDetail();
+  render();
+}
+
+function submitBudget(){
+  S.budget = +document.getElementById('f-budget').value||0;
+  save(); closeModal(); render();
+}
+
+function shake(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.add('error');
+  setTimeout(()=>el.classList.remove('error'),600);
+}
+
+/* ═══════════════════════════════════════════════
+   PWA — SERVICE WORKER
+   ═══════════════════════════════════════════════ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════ */
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+load();
+render();
+</script>
+</body>
+</html>
