@@ -91,6 +91,96 @@ button{-webkit-appearance:none;font-family:inherit}
 input,textarea,select{font-family:inherit}
 
 /* ═══════════════════════════════════════════════
+   PWA INSTALL BANNER
+   ═══════════════════════════════════════════════ */
+#pwa-banner{
+  position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-120%);
+  width:100%;max-width:430px;
+  background:var(--ink);
+  z-index:9999;
+  transition:transform .4s cubic-bezier(.16,1,.3,1);
+  padding:env(safe-area-inset-top,0) 0 0;
+}
+#pwa-banner.visible{transform:translateX(-50%) translateY(0)}
+#pwa-banner-inner{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px 13px;
+}
+#pwa-banner-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:#fff;flex-shrink:0;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+#pwa-banner-icon img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+#pwa-banner-text{flex:1;min-width:0}
+#pwa-banner-title{
+  font-size:13px;font-weight:600;color:#fff;
+  margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+#pwa-banner-sub{font-size:11px;color:rgba(255,255,255,.5);line-height:1.3}
+#pwa-banner-install{
+  background:var(--gold);color:var(--ink);
+  border:none;border-radius:10px;
+  padding:8px 14px;font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  font-family:var(--font-sans);
+  transition:opacity .15s;
+}
+#pwa-banner-install:active{opacity:.8}
+#pwa-banner-close{
+  background:none;border:none;cursor:pointer;
+  color:rgba(255,255,255,.4);font-size:20px;line-height:1;
+  padding:4px;flex-shrink:0;
+}
+/* iOS tip sheet */
+#ios-tip{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(120%);
+  width:100%;max-width:430px;
+  background:var(--card);
+  border-radius:24px 24px 0 0;
+  box-shadow:0 -4px 40px rgba(0,0,0,.15);
+  z-index:9999;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0));
+  transition:transform .4s cubic-bezier(.16,1,.3,1);
+}
+#ios-tip.visible{transform:translateX(-50%) translateY(0)}
+#ios-tip-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--border2);margin:0 auto 20px;
+}
+#ios-tip-title{
+  font-family:var(--font-serif);font-size:22px;font-weight:600;
+  color:var(--ink);text-align:center;margin-bottom:6px;
+}
+#ios-tip-sub{
+  font-size:13px;color:var(--ink2);text-align:center;margin-bottom:20px;line-height:1.5;
+}
+.ios-step{
+  display:flex;align-items:flex-start;gap:12px;
+  background:var(--bg2);border-radius:14px;padding:13px 14px;
+  margin-bottom:8px;
+}
+.ios-step-num{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--gold);color:var(--ink);
+  font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ios-step-text{font-size:13px;color:var(--ink);line-height:1.5}
+.ios-step-text b{font-weight:700}
+#ios-tip-close{
+  width:100%;margin-top:16px;
+  background:var(--ink);color:#fff;
+  border:none;border-radius:14px;padding:14px;
+  font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font-sans);
+}
+#ios-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);
+  z-index:9998;opacity:0;pointer-events:none;
+  transition:opacity .3s;
+}
+#ios-overlay.visible{opacity:1;pointer-events:all}
+
+/* ═══════════════════════════════════════════════
    ANIMATIONS
    ═══════════════════════════════════════════════ */
 @keyframes slideUp  {from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
@@ -1638,6 +1728,130 @@ function shake(id){
   el.classList.add('error');
   setTimeout(()=>el.classList.remove('error'),600);
 }
+
+/* ═══════════════════════════════════════════════
+   PWA — INSTALL BANNER
+   ═══════════════════════════════════════════════ */
+(function(){
+  const DISMISSED_KEY = 'estima_pwa_dismissed';
+  let deferredPrompt = null;
+
+  function isStandalone(){
+    return window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true;
+  }
+  function isIOS(){
+    return /iphone|ipad|ipod/i.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+  function isDismissed(){
+    try{ return !!localStorage.getItem(DISMISSED_KEY); }catch(e){ return false; }
+  }
+  function dismiss(){
+    try{ localStorage.setItem(DISMISSED_KEY,'1'); }catch(e){}
+  }
+
+  function injectUI(){
+    const banner = document.createElement('div');
+    banner.id = 'pwa-banner';
+    banner.innerHTML = `
+      <div id="pwa-banner-inner">
+        <div id="pwa-banner-icon"><img src="icons/icon-192.png" alt="Estima"></div>
+        <div id="pwa-banner-text">
+          <div id="pwa-banner-title">Установить Estima</div>
+          <div id="pwa-banner-sub">Работает без интернета</div>
+        </div>
+        <button id="pwa-banner-install">Установить</button>
+        <button id="pwa-banner-close" aria-label="Закрыть">&#215;</button>
+      </div>`;
+    document.body.prepend(banner);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'ios-overlay';
+    document.body.appendChild(overlay);
+
+    const tip = document.createElement('div');
+    tip.id = 'ios-tip';
+    tip.innerHTML = `
+      <div id="ios-tip-handle"></div>
+      <div id="ios-tip-title">Установить приложение</div>
+      <div id="ios-tip-sub">Добавь Estima на главный экран —<br>работает как настоящее приложение</div>
+      <div class="ios-step">
+        <div class="ios-step-num">1</div>
+        <div class="ios-step-text">Нажми кнопку <b>«Поделиться»</b> ⬆ внизу браузера</div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">2</div>
+        <div class="ios-step-text">Выбери <b>«На экран "Домой"»</b></div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-num">3</div>
+        <div class="ios-step-text">Нажми <b>«Добавить»</b> — готово!</div>
+      </div>
+      <button id="ios-tip-close">Понятно</button>`;
+    document.body.appendChild(tip);
+
+    function closeIOS(){
+      tip.classList.remove('visible');
+      overlay.classList.remove('visible');
+      dismiss();
+    }
+    overlay.addEventListener('click', closeIOS);
+    document.getElementById('ios-tip-close').addEventListener('click', closeIOS);
+  }
+
+  function init(){
+    if(isStandalone() || isDismissed()) return;
+    injectUI();
+
+    const banner = document.getElementById('pwa-banner');
+    const closeBtn = document.getElementById('pwa-banner-close');
+    const installBtn = document.getElementById('pwa-banner-install');
+
+    closeBtn.addEventListener('click', ()=>{
+      banner.classList.remove('visible');
+      dismiss();
+    });
+
+    if(isIOS()){
+      setTimeout(()=>banner.classList.add('visible'), 1200);
+      installBtn.addEventListener('click', ()=>{
+        banner.classList.remove('visible');
+        const tip = document.getElementById('ios-tip');
+        const overlay = document.getElementById('ios-overlay');
+        setTimeout(()=>{ tip.classList.add('visible'); overlay.classList.add('visible'); }, 300);
+      });
+      return;
+    }
+
+    window.addEventListener('beforeinstallprompt', e=>{
+      e.preventDefault();
+      deferredPrompt = e;
+      setTimeout(()=>banner.classList.add('visible'), 1200);
+    });
+
+    installBtn.addEventListener('click', ()=>{
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(choice=>{
+        if(choice.outcome === 'accepted') dismiss();
+        deferredPrompt = null;
+        banner.classList.remove('visible');
+      });
+    });
+
+    window.addEventListener('appinstalled', ()=>{
+      dismiss();
+      banner.classList.remove('visible');
+    });
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 
 /* ═══════════════════════════════════════════════
    PWA — SERVICE WORKER
