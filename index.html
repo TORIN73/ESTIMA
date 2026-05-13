@@ -1736,6 +1736,12 @@ function shake(id){
   const DISMISSED_KEY = 'estima_pwa_dismissed';
   let deferredPrompt = null;
 
+  // Перехватываем событие как можно раньше
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+
   function isStandalone(){
     return window.matchMedia('(display-mode: standalone)').matches
       || window.navigator.standalone === true;
@@ -1751,7 +1757,21 @@ function shake(id){
     try{ localStorage.setItem(DISMISSED_KEY,'1'); }catch(e){}
   }
 
+  function showTip(){
+    document.getElementById('ios-tip').classList.add('visible');
+    document.getElementById('ios-overlay').classList.add('visible');
+  }
+  function closeTip(){
+    document.getElementById('ios-tip').classList.remove('visible');
+    document.getElementById('ios-overlay').classList.remove('visible');
+    dismiss();
+  }
+  function hideBanner(){
+    document.getElementById('pwa-banner').classList.remove('visible');
+  }
+
   function injectUI(){
+    // ── Баннер сверху ──
     const banner = document.createElement('div');
     banner.id = 'pwa-banner';
     banner.innerHTML = `
@@ -1766,8 +1786,10 @@ function shake(id){
       </div>`;
     document.body.prepend(banner);
 
+    // ── Оверлей и шторка ──
     const overlay = document.createElement('div');
     overlay.id = 'ios-overlay';
+    overlay.addEventListener('click', closeTip);
     document.body.appendChild(overlay);
 
     const tip = document.createElement('div');
@@ -1791,59 +1813,42 @@ function shake(id){
       <button id="ios-tip-close">Понятно</button>`;
     document.body.appendChild(tip);
 
-    function closeIOS(){
-      tip.classList.remove('visible');
-      overlay.classList.remove('visible');
+    document.getElementById('ios-tip-close').addEventListener('click', closeTip);
+
+    // ── Кнопка закрыть баннер ──
+    document.getElementById('pwa-banner-close').addEventListener('click', ()=>{
+      hideBanner();
       dismiss();
-    }
-    overlay.addEventListener('click', closeIOS);
-    document.getElementById('ios-tip-close').addEventListener('click', closeIOS);
+    });
+
+    // ── Кнопка «Установить» ──
+    document.getElementById('pwa-banner-install').addEventListener('click', ()=>{
+      if(deferredPrompt){
+        // Android Chrome — нативный диалог
+        hideBanner();
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(choice=>{
+          if(choice.outcome === 'accepted') dismiss();
+          deferredPrompt = null;
+        });
+      } else {
+        // iOS или Chrome без события — показываем инструкцию
+        hideBanner();
+        setTimeout(showTip, 300);
+      }
+    });
+
+    window.addEventListener('appinstalled', ()=>{
+      dismiss();
+      hideBanner();
+    });
   }
 
   function init(){
     if(isStandalone() || isDismissed()) return;
     injectUI();
-
-    const banner = document.getElementById('pwa-banner');
-    const closeBtn = document.getElementById('pwa-banner-close');
-    const installBtn = document.getElementById('pwa-banner-install');
-
-    closeBtn.addEventListener('click', ()=>{
-      banner.classList.remove('visible');
-      dismiss();
-    });
-
-    if(isIOS()){
-      setTimeout(()=>banner.classList.add('visible'), 1200);
-      installBtn.addEventListener('click', ()=>{
-        banner.classList.remove('visible');
-        const tip = document.getElementById('ios-tip');
-        const overlay = document.getElementById('ios-overlay');
-        setTimeout(()=>{ tip.classList.add('visible'); overlay.classList.add('visible'); }, 300);
-      });
-      return;
-    }
-
-    window.addEventListener('beforeinstallprompt', e=>{
-      e.preventDefault();
-      deferredPrompt = e;
-      setTimeout(()=>banner.classList.add('visible'), 1200);
-    });
-
-    installBtn.addEventListener('click', ()=>{
-      if(!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(choice=>{
-        if(choice.outcome === 'accepted') dismiss();
-        deferredPrompt = null;
-        banner.classList.remove('visible');
-      });
-    });
-
-    window.addEventListener('appinstalled', ()=>{
-      dismiss();
-      banner.classList.remove('visible');
-    });
+    // Показываем баннер сразу — не ждём beforeinstallprompt
+    setTimeout(()=>document.getElementById('pwa-banner').classList.add('visible'), 1000);
   }
 
   if(document.readyState === 'loading'){
