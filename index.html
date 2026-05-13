@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="Estima">
 <meta name="description" content="Трекер расходов на ремонт квартиры">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <title>Estima — Ремонт</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1733,129 +1733,102 @@ function shake(id){
    PWA — INSTALL BANNER
    ═══════════════════════════════════════════════ */
 (function(){
-  const DISMISSED_KEY = 'estima_pwa_dismissed';
-  let deferredPrompt = null;
+  var KEY = 'estima_installed';
+  var deferredPrompt = null;
 
-  // Перехватываем событие как можно раньше
-  window.addEventListener('beforeinstallprompt', e=>{
+  // Ловим beforeinstallprompt как можно раньше — до DOMContentLoaded
+  window.addEventListener('beforeinstallprompt', function(e){
     e.preventDefault();
     deferredPrompt = e;
   });
+  window.addEventListener('appinstalled', function(){
+    try{ localStorage.setItem(KEY,'1'); }catch(x){}
+    var b = document.getElementById('pwa-banner');
+    if(b) b.classList.remove('visible');
+  });
 
-  function isStandalone(){
-    return window.matchMedia('(display-mode: standalone)').matches
-      || window.navigator.standalone === true;
-  }
-  function isIOS(){
-    return /iphone|ipad|ipod/i.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  }
-  function isDismissed(){
-    try{ return !!localStorage.getItem(DISMISSED_KEY); }catch(e){ return false; }
-  }
-  function dismiss(){
-    try{ localStorage.setItem(DISMISSED_KEY,'1'); }catch(e){}
+  function ready(fn){
+    if(document.readyState !== 'loading') fn();
+    else document.addEventListener('DOMContentLoaded', fn);
   }
 
-  function showTip(){
-    document.getElementById('ios-tip').classList.add('visible');
-    document.getElementById('ios-overlay').classList.add('visible');
-  }
-  function closeTip(){
-    document.getElementById('ios-tip').classList.remove('visible');
-    document.getElementById('ios-overlay').classList.remove('visible');
-    dismiss();
-  }
-  function hideBanner(){
-    document.getElementById('pwa-banner').classList.remove('visible');
-  }
+  ready(function(){
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var installed = false;
+    try{ installed = !!localStorage.getItem(KEY); }catch(x){}
+    if(standalone || installed) return;
 
-  function injectUI(){
-    // ── Баннер сверху ──
-    const banner = document.createElement('div');
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+    // Баннер
+    var banner = document.createElement('div');
     banner.id = 'pwa-banner';
-    banner.innerHTML = `
-      <div id="pwa-banner-inner">
-        <div id="pwa-banner-icon"><img src="icons/icon-192.png" alt="Estima"></div>
-        <div id="pwa-banner-text">
-          <div id="pwa-banner-title">Установить Estima</div>
-          <div id="pwa-banner-sub">Работает без интернета</div>
-        </div>
-        <button id="pwa-banner-install">Установить</button>
-        <button id="pwa-banner-close" aria-label="Закрыть">&#215;</button>
-      </div>`;
+    banner.innerHTML =
+      '<div id="pwa-banner-inner">' +
+        '<div id="pwa-banner-icon"><img src="icon-192.png" alt="Estima"></div>' +
+        '<div id="pwa-banner-text">' +
+          '<div id="pwa-banner-title">Установить Estima</div>' +
+          '<div id="pwa-banner-sub">Работает без интернета</div>' +
+        '</div>' +
+        '<button id="pwa-banner-install">Установить</button>' +
+        '<button id="pwa-banner-close">&#215;</button>' +
+      '</div>';
     document.body.prepend(banner);
 
-    // ── Оверлей и шторка ──
-    const overlay = document.createElement('div');
+    // Оверлей
+    var overlay = document.createElement('div');
     overlay.id = 'ios-overlay';
-    overlay.addEventListener('click', closeTip);
     document.body.appendChild(overlay);
 
-    const tip = document.createElement('div');
+    // Шторка с инструкцией
+    var tip = document.createElement('div');
     tip.id = 'ios-tip';
-    tip.innerHTML = `
-      <div id="ios-tip-handle"></div>
-      <div id="ios-tip-title">Установить приложение</div>
-      <div id="ios-tip-sub">Добавь Estima на главный экран —<br>работает как настоящее приложение</div>
-      <div class="ios-step">
-        <div class="ios-step-num">1</div>
-        <div class="ios-step-text">Нажми кнопку <b>«Поделиться»</b> ⬆ внизу браузера</div>
-      </div>
-      <div class="ios-step">
-        <div class="ios-step-num">2</div>
-        <div class="ios-step-text">Выбери <b>«На экран "Домой"»</b></div>
-      </div>
-      <div class="ios-step">
-        <div class="ios-step-num">3</div>
-        <div class="ios-step-text">Нажми <b>«Добавить»</b> — готово!</div>
-      </div>
-      <button id="ios-tip-close">Понятно</button>`;
+    if(isIOS){
+      tip.innerHTML =
+        '<div id="ios-tip-handle"></div>' +
+        '<div id="ios-tip-title">Установить приложение</div>' +
+        '<div id="ios-tip-sub">Добавь Estima на главный экран —<br>работает как настоящее приложение</div>' +
+        '<div class="ios-step"><div class="ios-step-num">1</div><div class="ios-step-text">Нажми <b>«Поделиться»</b> ⬆ внизу Safari</div></div>' +
+        '<div class="ios-step"><div class="ios-step-num">2</div><div class="ios-step-text">Выбери <b>«На экран "Домой"»</b></div></div>' +
+        '<div class="ios-step"><div class="ios-step-num">3</div><div class="ios-step-text">Нажми <b>«Добавить»</b></div></div>' +
+        '<button id="ios-tip-close">Понятно</button>';
+    } else {
+      tip.innerHTML =
+        '<div id="ios-tip-handle"></div>' +
+        '<div id="ios-tip-title">Установить приложение</div>' +
+        '<div id="ios-tip-sub">Открой меню Chrome и установи<br>приложение на телефон</div>' +
+        '<div class="ios-step"><div class="ios-step-num">1</div><div class="ios-step-text">Нажми <b>⋮</b> три точки в правом верхнем углу</div></div>' +
+        '<div class="ios-step"><div class="ios-step-num">2</div><div class="ios-step-text">Выбери <b>«Добавить на главный экран»</b></div></div>' +
+        '<div class="ios-step"><div class="ios-step-num">3</div><div class="ios-step-text">Нажми <b>«Добавить»</b> — готово!</div></div>' +
+        '<button id="ios-tip-close">Понятно</button>';
+    }
     document.body.appendChild(tip);
 
-    document.getElementById('ios-tip-close').addEventListener('click', closeTip);
+    function showTip(){ tip.classList.add('visible'); overlay.classList.add('visible'); }
+    function closeTip(){ tip.classList.remove('visible'); overlay.classList.remove('visible'); }
+    function hideBanner(){ banner.classList.remove('visible'); }
+    function dismissAll(){ hideBanner(); try{ localStorage.setItem(KEY,'1'); }catch(x){} }
 
-    // ── Кнопка закрыть баннер ──
-    document.getElementById('pwa-banner-close').addEventListener('click', ()=>{
-      hideBanner();
-      dismiss();
-    });
+    overlay.addEventListener('click', function(){ closeTip(); });
+    document.getElementById('ios-tip-close').addEventListener('click', function(){ closeTip(); dismissAll(); });
+    document.getElementById('pwa-banner-close').addEventListener('click', function(){ dismissAll(); });
 
-    // ── Кнопка «Установить» ──
-    document.getElementById('pwa-banner-install').addEventListener('click', ()=>{
+    document.getElementById('pwa-banner-install').addEventListener('click', function(){
       if(deferredPrompt){
-        // Android Chrome — нативный диалог
         hideBanner();
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(choice=>{
-          if(choice.outcome === 'accepted') dismiss();
+        deferredPrompt.userChoice.then(function(r){
+          if(r.outcome === 'accepted'){ try{ localStorage.setItem(KEY,'1'); }catch(x){} }
           deferredPrompt = null;
         });
       } else {
-        // iOS или Chrome без события — показываем инструкцию
         hideBanner();
-        setTimeout(showTip, 300);
+        setTimeout(showTip, 350);
       }
     });
 
-    window.addEventListener('appinstalled', ()=>{
-      dismiss();
-      hideBanner();
-    });
-  }
-
-  function init(){
-    if(isStandalone() || isDismissed()) return;
-    injectUI();
-    // Показываем баннер сразу — не ждём beforeinstallprompt
-    setTimeout(()=>document.getElementById('pwa-banner').classList.add('visible'), 1000);
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+    setTimeout(function(){ banner.classList.add('visible'); }, 1500);
+  });
 })();
 
 /* ═══════════════════════════════════════════════
